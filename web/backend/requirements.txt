@@ -1,0 +1,39 @@
+# ── Web framework ────────────────────────────────────────────────────────────
+fastapi>=0.115.6
+uvicorn[standard]>=0.34.0
+python-multipart>=0.0.20
+
+# ── Data layer (async + sync) ────────────────────────────────────────────────
+sqlalchemy>=2.0.36
+asyncpg>=0.30.0          # async Postgres driver (web)
+psycopg[binary]>=3.2.10  # sync Postgres driver (worker / alembic / seed)
+aiosqlite>=0.20.0        # async SQLite driver (zero-infra dev)
+greenlet>=3.1.1          # required by SQLAlchemy async
+alembic>=1.14.0
+
+# ── Validation / config ──────────────────────────────────────────────────────
+pydantic>=2.10.4
+pydantic-settings>=2.7.0
+email-validator>=2.2.0
+python-dotenv>=1.0.1
+
+# ── Security ─────────────────────────────────────────────────────────────────
+PyJWT>=2.10.1
+argon2-cffi>=23.1.0
+pyotp>=2.9.0             # TOTP MFA (Phase 1)
+slowapi>=0.1.9          # rate limiting (Phase 1)
+
+# ── Jobs / queue / scheduling ────────────────────────────────────────────────
+redis>=5.2.0
+rq>=2.0.0
+apscheduler>=3.11.0
+croniter>=6.0.0
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+httpx>=0.28.1
+reportlab>=4.2.5
+
+# ── Testing ──────────────────────────────────────────────────────────────────
+pytest>=8.3.4
+pytest-asyncio>=0.25.0
+pytest-cov>=6.0.0

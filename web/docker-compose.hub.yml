@@ -1,0 +1,70 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Strix Console — launch from published Docker Hub images.
+#   docker compose -f docker-compose.hub.yml up -d
+# Pulls ahmedbenhamad/strix-console-{backend,frontend}; brings up Postgres + Redis.
+# Override secrets via a .env file (see .env.example) next to this file.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-strix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strix}
+      POSTGRES_DB: ${POSTGRES_DB:-strix_console}
+    volumes:
+      - strix_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-strix}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    image: ${IMAGE_NAMESPACE:-ahmedbenhamad}/strix-console-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      # async engine derives asyncpg; sync engine (worker/alembic/seed) derives psycopg
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-strix}:${POSTGRES_PASSWORD:-strix}@db:5432/${POSTGRES_DB:-strix_console}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
+      FIRST_ADMIN_EMAIL: ${FIRST_ADMIN_EMAIL:-admin@strix.local}
+      FIRST_ADMIN_PASSWORD: ${FIRST_ADMIN_PASSWORD:-ChangeMe123!}
+      # The engine runs in simulation unless a real Strix repo is mounted/configured.
+      STRIX_FORCE_SIMULATION: ${STRIX_FORCE_SIMULATION:-true}
+      # Optional assistant/RAG wiring:
+      RAG_BASE_URL: ${RAG_BASE_URL:-http://localhost:8000}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+    ports:
+      - "${BACKEND_PORT:-8080}:8000"
+
+  frontend:
+    image: ${IMAGE_NAMESPACE:-ahmedbenhamad}/strix-console-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # Server-side proxy target for /api/* (browser stays same-origin).
+      BACKEND_ORIGIN: http://backend:8000
+      NEXT_PUBLIC_API_BASE_URL: /api/v1
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+
+volumes:
+  strix_pgdata:

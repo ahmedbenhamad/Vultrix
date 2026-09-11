@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Purpose-built vulnerable target for validating Strix + Metasploit end-to-end.
+#
+#   docker compose up -d --build
+#
+# Builds a small distccd container (CVE-2004-2687). Validate with Metasploit:
+#     msf > use exploit/unix/misc/distcc_exec
+#     msf > set RHOSTS <host-ip>;  set RPORT 3632;  run     # -> command execution
+#
+# From a Strix scan, target `host.docker.internal` (the sandbox reaches the host
+# gateway); the daemon is published on host port 3632.
+#
+# ⚠ Lab only. Intentionally insecure — never expose to a routable network.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  distcc-target:
+    build: .
+    image: strix-vuln-distcc:latest
+    container_name: strix-vuln-target
+    restart: unless-stopped
+    ports:
+      - "3632:3632"       # distccd -> exploit/unix/misc/distcc_exec
+    networks:
+      - strix_lab
+
+networks:
+  strix_lab:
+    driver: bridge
