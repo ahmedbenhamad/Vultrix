@@ -1,0 +1,8 @@
+FROM qdrant/qdrant:latest
+
+COPY ./qdrant_storage/storage /qdrant/storage
+
+
+EXPOSE 6333
+
+CMD ["./qdrant"]
