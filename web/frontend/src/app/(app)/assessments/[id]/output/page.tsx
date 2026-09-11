@@ -1,13 +1,14 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { use, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Radio, Cpu, Coins, Activity, Clock, Search } from "lucide-react";
+import { ArrowLeft, Radio, Cpu, Coins, Activity, Clock } from "lucide-react";
 import { useApi } from "@/lib/hooks";
-import { useLiveAssessment, type LiveLog } from "@/lib/useLiveAssessment";
+import { useLiveAssessment } from "@/lib/useLiveAssessment";
 import type { AgentNode, AssessmentOutput } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle, Input, Skeleton } from "@/components/ui/primitives";
+import { Card, CardContent, CardHeader, CardTitle, Skeleton } from "@/components/ui/primitives";
 import { EmptyState } from "@/components/ui/shared";
+import { LiveConsole } from "@/components/ui/live-console";
 
 const AGENT_TONE: Record<string, string> = {
   running: "bg-primary",
@@ -17,17 +18,10 @@ const AGENT_TONE: Record<string, string> = {
   queued: "bg-info",
 };
 
-const LOG_TONE: Record<string, string> = {
-  error: "text-critical",
-  warn: "text-high",
-  info: "text-slate-300",
-  debug: "text-slate-500",
-};
-
 export default function OutputPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data, loading } = useApi<AssessmentOutput>(`/assessments/${id}/output`, [id], 3000);
-  const { connected, live, logs } = useLiveAssessment(Number(id));
+  const { connected, live, logs, feed } = useLiveAssessment(Number(id));
 
   return (
     <div>
@@ -62,8 +56,8 @@ export default function OutputPage({ params }: { params: Promise<{ id: string }>
         </Card>
 
         <Card className="lg:col-span-3">
-          <CardHeader><CardTitle>Console</CardTitle></CardHeader>
-          <CardContent><Terminal logs={logs} /></CardContent>
+          <CardHeader><CardTitle>Live console</CardTitle></CardHeader>
+          <CardContent><LiveConsole feed={feed} logs={logs} /></CardContent>
         </Card>
       </div>
     </div>
@@ -156,44 +150,3 @@ function AgentRow({ node, childrenOf, depth }: { node: AgentNode; childrenOf: (i
   );
 }
 
-function Terminal({ logs }: { logs: LiveLog[] }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [q, setQ] = useState("");
-  const [level, setLevel] = useState("");
-  const filtered = logs.filter(
-    (l) => (!level || l.level === level) && (!q || l.message.toLowerCase().includes(q.toLowerCase())),
-  );
-  useEffect(() => {
-    ref.current?.scrollTo({ top: ref.current.scrollHeight });
-  }, [filtered.length]);
-
-  return (
-    <div>
-      <div className="mb-2 flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter output…" className="h-9 pl-8" />
-        </div>
-        <select value={level} onChange={(e) => setLevel(e.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-sm">
-          <option value="">All</option>
-          <option value="info">Info</option>
-          <option value="warn">Warn</option>
-          <option value="error">Error</option>
-        </select>
-      </div>
-      <div ref={ref} className="h-[28rem] overflow-auto rounded-md bg-slate-950 p-3 font-mono text-xs leading-relaxed">
-        {filtered.length === 0 ? (
-          <p className="text-slate-500">Waiting for output…</p>
-        ) : (
-          filtered.map((l, i) => (
-            <div key={i} className="flex gap-2">
-              <span className="shrink-0 text-slate-600">{l.created_at ? new Date(l.created_at).toLocaleTimeString() : ""}</span>
-              <span className={`shrink-0 uppercase ${LOG_TONE[l.level] ?? "text-slate-400"}`}>{l.level}</span>
-              <span className="break-all text-slate-300">{l.message}</span>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}

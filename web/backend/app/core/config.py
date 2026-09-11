@@ -9,14 +9,14 @@ class Settings(BaseSettings):
     )
 
     # App
-    APP_NAME: str = "Strix Console"
+    APP_NAME: str = "Vultrix Console"
     ENVIRONMENT: str = "development"
     API_V1_PREFIX: str = "/api/v1"
     # Comma-separated in env; use the `cors_origins` property for the parsed list.
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
 
     # Database
-    DATABASE_URL: str = "sqlite+pysqlite:///./strix_console.db"
+    DATABASE_URL: str = "sqlite+pysqlite:///./vultrix_console.db"
 
     # Redis / job queue (Phase 0)
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -31,9 +31,9 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: str = "lax"  # lax | strict | none
     COOKIE_DOMAIN: str = ""
-    ACCESS_COOKIE_NAME: str = "strix_access"
-    REFRESH_COOKIE_NAME: str = "strix_refresh"
-    CSRF_COOKIE_NAME: str = "strix_csrf"
+    ACCESS_COOKIE_NAME: str = "vultrix_access"
+    REFRESH_COOKIE_NAME: str = "vultrix_refresh"
+    CSRF_COOKIE_NAME: str = "vultrix_csrf"
     CSRF_HEADER_NAME: str = "X-CSRF-Token"
 
     # Brute-force protection (Phase 1)
@@ -42,12 +42,12 @@ class Settings(BaseSettings):
     LOCKOUT_MINUTES: int = 15
 
     # MFA (Phase 1)
-    MFA_ISSUER: str = "Strix Console"
+    MFA_ISSUER: str = "Vultrix Console"
     # Roles for which TOTP MFA is mandatory (comma-separated).
     MFA_REQUIRED_ROLES: str = "admin,manager"
 
     # First admin
-    FIRST_ADMIN_EMAIL: str = "admin@strix.local"
+    FIRST_ADMIN_EMAIL: str = "admin@vultrix.local"
     FIRST_ADMIN_PASSWORD: str = "ChangeMe123!"
     FIRST_ADMIN_NAME: str = "Administrator"
 

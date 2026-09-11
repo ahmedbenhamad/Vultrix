@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Capture les vraies vues de l'interface Strix Console en PNG via Playwright."""
+"""Capture les vraies vues de l'interface Vultrix Console en PNG via Playwright."""
 import os
 from playwright.sync_api import sync_playwright
 
@@ -22,7 +22,7 @@ def run():
         print("login.png")
 
         # Connexion via le formulaire
-        page.fill("#email", "admin@strix.local")
+        page.fill("#email", "admin@vultrix.local")
         page.fill("#password", "ChangeMe123!")
         page.click("button[type=submit]")
         page.wait_for_url("**/dashboard", timeout=15000)

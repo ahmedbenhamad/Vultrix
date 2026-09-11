@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Play, Ban, FileDown, Loader2, Radio, Terminal as TerminalIcon,
@@ -9,7 +9,8 @@ import {
 import { apiFetch, downloadExport } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { useAuth } from "@/lib/auth";
-import { useLiveAssessment } from "@/lib/useLiveAssessment";
+import { useLiveAssessment, type LiveLog, type FeedItem } from "@/lib/useLiveAssessment";
+import { LiveConsole } from "@/components/ui/live-console";
 import type { Assessment, PostExEvent, Finding, DiffFinding, ScanDiff } from "@/lib/types";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Skeleton } from "@/components/ui/primitives";
 import { PageHeader, SeverityBadge, StatusBadge, EmptyState } from "@/components/ui/shared";
@@ -18,12 +19,6 @@ import { formatDate } from "@/lib/utils";
 
 const PHASES = ["recon", "vuln-assessment", "exploitation", "post-exploitation", "reporting"];
 
-const LOG_TONE: Record<string, string> = {
-  error: "text-critical",
-  warn: "text-high",
-  info: "text-foreground/80",
-  debug: "text-muted-foreground",
-};
 
 export default function AssessmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -31,7 +26,7 @@ export default function AssessmentDetailPage({ params }: { params: Promise<{ id:
   const toast = useToast();
   // Poll as a safety net; the WebSocket provides the snappy live overlay.
   const { data: a, loading, reload } = useApi<Assessment>(`/assessments/${id}`, [id], 8000);
-  const { connected, live, logs } = useLiveAssessment(Number(id), reload);
+  const { connected, live, logs, feed } = useLiveAssessment(Number(id), reload);
 
   async function action(verb: "run" | "cancel") {
     try {
@@ -43,9 +38,13 @@ export default function AssessmentDetailPage({ params }: { params: Promise<{ id:
     }
   }
 
-  function exportPdf(assessmentId: number) {
-    downloadExport(assessmentId, "pdf");
+  async function exportPdf(assessmentId: number) {
     toast.info("Preparing PDF", "Your download will start shortly.");
+    try {
+      await downloadExport(assessmentId, "pdf");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed");
+    }
   }
 
   if (loading && !a)
@@ -146,7 +145,7 @@ export default function AssessmentDetailPage({ params }: { params: Promise<{ id:
         </Card>
       </div>
 
-      {(logs.length > 0 || running) && <ConsoleCard logs={logs} />}
+      {(logs.length > 0 || feed.length > 0 || running) && <ConsoleCard logs={logs} feed={feed} />}
 
       {a.post_ex && a.post_ex.length > 0 && <PostExSection events={a.post_ex} />}
 
@@ -291,27 +290,12 @@ function LiveBadge({ connected, running }: { connected: boolean; running: boolea
   );
 }
 
-function ConsoleCard({ logs }: { logs: { level: string; message: string; created_at?: string | null }[] }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    ref.current?.scrollTo({ top: ref.current.scrollHeight });
-  }, [logs]);
+function ConsoleCard({ logs, feed }: { logs: LiveLog[]; feed: FeedItem[] }) {
   return (
     <Card className="mt-4">
       <CardHeader><CardTitle>Live console</CardTitle></CardHeader>
       <CardContent>
-        <div ref={ref} className="max-h-80 overflow-auto rounded-md bg-slate-950 p-3 font-mono text-xs leading-relaxed">
-          {logs.length === 0 ? (
-            <p className="text-slate-500">Waiting for output…</p>
-          ) : (
-            logs.map((l, i) => (
-              <div key={i} className="flex gap-2">
-                <span className="shrink-0 text-slate-600">{l.created_at ? new Date(l.created_at).toLocaleTimeString() : ""}</span>
-                <span className={`${LOG_TONE[l.level] ?? "text-slate-300"} break-all`}>{l.message}</span>
-              </div>
-            ))
-          )}
-        </div>
+        <LiveConsole feed={feed} logs={logs} height="max-h-80" />
       </CardContent>
     </Card>
   );

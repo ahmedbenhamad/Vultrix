@@ -47,8 +47,12 @@ def _print_now(self):
     console = self.console or rich.console.Console()
     try:
         console.print(r)
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as exc:  # noqa: BLE001
+        print(
+            f"[strix_stream] Rich render failed: {type(exc).__name__}: {exc}",
+            file=sys.stderr,
+            flush=True,
+        )
 
 
 def _patched_enter(self):
@@ -86,7 +90,90 @@ rich.live.Live.start = _noop
 rich.live.Live.stop = _noop
 
 # ── Hand off to Strix ────────────────────────────────────────────────────────
-sys.argv[0] = "strix"
-from strix.interface.main import main  # noqa: E402
+#
+# When PYTHONPATH contains an explicit Strix package (as in the streaming
+# regression test), load that exact entry-point file.  This avoids Windows
+# import-order/package-cache issues where another local Strix installation can
+# otherwise be selected.
+import importlib.util
 
-sys.exit(main() or 0)
+def _find_strix_entrypoint():
+    raw = os.environ.get("PYTHONPATH", "")
+    for entry in raw.split(os.pathsep):
+        if not entry:
+            continue
+        try:
+            root = os.path.abspath(entry)
+            main_py = os.path.join(root, "strix", "interface", "main.py")
+            if os.path.isfile(main_py):
+                return root, main_py
+        except (OSError, TypeError):
+            continue
+    return None, None
+
+
+def _load_entrypoint():
+    root, main_py = _find_strix_entrypoint()
+
+    if main_py is not None:
+        # Make the selected package root authoritative for imports performed by
+        # the entry point itself.
+        sys.path[:] = [
+            p for p in sys.path
+            if os.path.abspath(p or os.curdir) != root
+        ]
+        sys.path.insert(0, root)
+
+        # Remove any already-loaded Strix modules.
+        for name in list(sys.modules):
+            if name == "strix" or name.startswith("strix."):
+                del sys.modules[name]
+
+        # Load the exact file selected from PYTHONPATH.  This is deterministic
+        # on Windows and works with the temporary stub used by pytest.
+        spec = importlib.util.spec_from_file_location(
+            "strix.interface.main",
+            main_py,
+            submodule_search_locations=None,
+        )
+        if spec is None or spec.loader is None:
+            raise ImportError(f"Unable to load Strix entry point: {main_py}")
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["strix.interface.main"] = module
+        spec.loader.exec_module(module)
+
+        entrypoint = getattr(module, "main", None)
+        if entrypoint is None:
+            raise AttributeError(f"No main() function found in {main_py}")
+        return entrypoint
+
+    # Normal production path: use the installed/local Strix package.
+    try:
+        from strix.interface.main import main  # noqa: E402
+        return main
+    except Exception as exc:
+        print(
+            f"[strix_stream] Failed to import strix.interface.main: "
+            f"{type(exc).__name__}: {exc}",
+            file=sys.stderr,
+            flush=True,
+        )
+        raise
+
+
+sys.argv[0] = "strix"
+main = _load_entrypoint()
+
+try:
+    result = main()
+except Exception as exc:
+    print(
+        f"[strix_stream] Strix main() failed: "
+        f"{type(exc).__name__}: {exc}",
+        file=sys.stderr,
+        flush=True,
+    )
+    raise
+
+sys.exit(result or 0)

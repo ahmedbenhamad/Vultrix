@@ -1,4 +1,4 @@
-# Strix Console — Docker deployment
+# Vultrix Console — Docker deployment
 
 Package the console (FastAPI backend + Next.js frontend) as two Docker Hub
 images and launch the full stack (with Postgres + Redis) in one command.
@@ -7,8 +7,8 @@ images and launch the full stack (with Postgres + Redis) in one command.
 
 | Service  | Image                                       |
 |----------|---------------------------------------------|
-| Backend  | `ahmedbenhamad/strix-console-backend`       |
-| Frontend | `ahmedbenhamad/strix-console-frontend`      |
+| Backend  | `ahmedbenhamad/vultrix-console-backend`       |
+| Frontend | `ahmedbenhamad/vultrix-console-frontend`      |
 
 Postgres (`postgres:16-alpine`) and Redis (`redis:7-alpine`) are pulled from the
 official images — nothing to build for those.
@@ -38,7 +38,7 @@ docker compose -f docker-compose.hub.yml up -d
 - Frontend: <http://localhost:3000>
 - Backend API docs: <http://localhost:8080/api/v1/docs>
 - First login: the `FIRST_ADMIN_EMAIL` / `FIRST_ADMIN_PASSWORD` from `.env`
-  (default `admin@strix.local` / `ChangeMe123!`). Schema and admin are seeded
+  (default `admin@vultrix.local` / `ChangeMe123!`). Schema and admin are seeded
   automatically on first backend startup.
 
 Stop / reset:

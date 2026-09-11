@@ -11,7 +11,7 @@ def test_login_and_me(client, admin_headers):
     r = client.get("/api/v1/auth/me", headers=admin_headers)
     assert r.status_code == 200
     body = r.json()
-    assert body["email"] == "admin@strix.local"
+    assert body["email"] == "admin@vultrix.local"
     assert body["role"]["name"] == "admin"
     assert len(body["permissions"]) > 0
 
@@ -19,7 +19,7 @@ def test_login_and_me(client, admin_headers):
 def test_login_rejects_bad_password(client):
     r = client.post(
         "/api/v1/auth/login",
-        data={"username": "admin@strix.local", "password": "wrong"},
+        data={"username": "admin@vultrix.local", "password": "wrong"},
     )
     assert r.status_code == 401
 
@@ -57,11 +57,11 @@ def test_rbac_viewer_is_blocked(client, admin_headers):
     client.post(
         "/api/v1/users",
         headers=admin_headers,
-        json={"email": "rbac-viewer@strix.io", "password": "ViewerPass1", "role_id": viewer_id},
+        json={"email": "rbac-viewer@vultrix.io", "password": "ViewerPass1", "role_id": viewer_id},
     )
     tok = client.post(
         "/api/v1/auth/login",
-        data={"username": "rbac-viewer@strix.io", "password": "ViewerPass1"},
+        data={"username": "rbac-viewer@vultrix.io", "password": "ViewerPass1"},
     ).json()["access_token"]
     vh = {"Authorization": f"Bearer {tok}"}
 

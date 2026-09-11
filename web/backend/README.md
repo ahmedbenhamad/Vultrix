@@ -1,6 +1,6 @@
-# Strix Console — Backend (FastAPI)
+# Vultrix Console — Backend (FastAPI)
 
-REST API for the Strix security-testing web interface: auth, RBAC, assessments,
+REST API for the Vultrix security-testing web interface: auth, RBAC, assessments,
 logs, reports, exports, audit trail, and the AI-assistant proxy.
 
 ## Stack
@@ -14,7 +14,7 @@ python -m venv .venv
 .venv/Scripts/activate            # Windows;  source .venv/bin/activate on *nix
 pip install -r requirements.txt
 cp .env.example .env              # then edit SECRET_KEY etc.
-# For zero-setup dev, set in .env:  DATABASE_URL=sqlite+pysqlite:///./strix_console.db
+# For zero-setup dev, set in .env:  DATABASE_URL=sqlite+pysqlite:///./vultrix_console.db
 uvicorn app.main:app --reload --port 8000
 ```
 

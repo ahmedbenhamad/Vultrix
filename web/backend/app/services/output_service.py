@@ -48,6 +48,49 @@ def parse_agents(run_dir: Path) -> list[dict[str, Any]]:
     return nodes
 
 
+def parse_agents_from_events(run_dir: Path) -> list[dict[str, Any]]:
+    """Reconstruct the agent tree from ``events.jsonl`` (0.7.0 engine).
+
+    The 0.7.0 tracer doesn't persist ``.state/agents.json``; it streams agent
+    lifecycle events instead. We replay them to build the same node shape the
+    Output screen expects (id, name, status, parent, task, pending).
+    """
+    path = run_dir / "events.jsonl"
+    if not path.exists():
+        return []
+    nodes: dict[str, dict[str, Any]] = {}
+    try:
+        with path.open("r", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    ev = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                kind = ev.get("kind")
+                if kind == "agent_created":
+                    aid = ev.get("agent_id")
+                    if not aid:
+                        continue
+                    nodes[aid] = {
+                        "id": aid,
+                        "name": ev.get("name") or aid,
+                        "status": "running",
+                        "parent": ev.get("parent_id"),
+                        "task": (ev.get("task") or "").strip()[:600],
+                        "pending": 0,
+                    }
+                elif kind == "agent_status":
+                    aid = ev.get("agent_id")
+                    if aid in nodes and ev.get("status"):
+                        nodes[aid]["status"] = ev["status"]
+    except OSError:
+        return []
+    return list(nodes.values())
+
+
 def parse_telemetry(run_dir: Path) -> dict[str, Any] | None:
     path = run_dir / "run.json"
     if not path.exists():
@@ -73,9 +116,10 @@ def read_output(assessment: Assessment) -> dict[str, Any]:
     run_dir = _run_dir(assessment)
     if run_dir is None:
         return {"run_id": assessment.strix_run_id, "has_run_dir": False, "agents": [], "telemetry": None}
+    agents = parse_agents(run_dir) or parse_agents_from_events(run_dir)
     return {
         "run_id": run_dir.name,
         "has_run_dir": True,
-        "agents": parse_agents(run_dir),
+        "agents": agents,
         "telemetry": parse_telemetry(run_dir),
     }

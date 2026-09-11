@@ -1,4 +1,4 @@
-# Strix Console — Web Interface
+# Vultrix Console — Web Interface
 
 A professional, secure web console for the Strix AI penetration-testing platform:
 statistics, assessments pipeline & tracking, findings, reports (PDF/CSV/JSON export),
@@ -35,7 +35,7 @@ cd web/backend
 python -m venv .venv && .venv/Scripts/activate     # source .venv/bin/activate on *nix
 pip install -r requirements.txt
 cp .env.example .env
-# in .env set:  DATABASE_URL=sqlite+pysqlite:///./strix_console.db
+# in .env set:  DATABASE_URL=sqlite+pysqlite:///./vultrix_console.db
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -46,7 +46,7 @@ npm install
 npm run dev            # http://localhost:3000  (proxies /api/* -> :8000)
 ```
 
-Log in with the seeded admin: **admin@strix.local / ChangeMe123!**
+Log in with the seeded admin: **admin@vultrix.local / ChangeMe123!**
 
 ## Full stack with Postgres (Docker)
 ```bash

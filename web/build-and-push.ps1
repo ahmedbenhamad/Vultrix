@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Build and push Strix Console images to Docker Hub.
+# Build and push Vultrix Console images to Docker Hub.
 #
 #   1. Start Docker Desktop
 #   2. docker login            (enter your Docker Hub credentials yourself)
@@ -14,8 +14,8 @@ param(
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-$backend  = "$Namespace/strix-console-backend"
-$frontend = "$Namespace/strix-console-frontend"
+$backend  = "$Namespace/vultrix-console-backend"
+$frontend = "$Namespace/vultrix-console-frontend"
 
 Write-Host "==> Building backend: $backend" -ForegroundColor Cyan
 docker build -t "${backend}:$Tag" -t "${backend}:latest" "$here/backend"

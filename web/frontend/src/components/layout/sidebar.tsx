@@ -19,7 +19,7 @@ function NavContent({ onNavigate }: { onNavigate?: () => void }) {
           <ShieldAlert className="h-5 w-5 text-primary-foreground" />
         </div>
         <div>
-          <p className="text-sm font-semibold leading-tight">Strix Console</p>
+          <p className="text-sm font-semibold leading-tight">Vultrix Console</p>
           <p className="text-[11px] text-sidebar-foreground/60">Security Operations</p>
         </div>
       </div>
@@ -60,7 +60,7 @@ function NavContent({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      <div className="border-t border-white/10 px-5 py-3 text-[11px] text-sidebar-foreground/50">v0.1.0 · Strix</div>
+      <div className="border-t border-white/10 px-5 py-3 text-[11px] text-sidebar-foreground/50">v0.1.0 · Vultrix</div>
     </>
   );
 }

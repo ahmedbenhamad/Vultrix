@@ -32,11 +32,24 @@ async def list_reports(
     return Page(items=[ReportOut.model_validate(r) for r in rows], total=total, page=page, page_size=page_size)
 
 
+@router.get("/assessment/{assessment_id}/strix-report")
+async def get_strix_report(
+    assessment_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_permission(Permission.REPORT_READ)),
+) -> dict:
+    """The exact engine-generated report markdown + per-vulnerability markdown."""
+    a = await db.get(Assessment, assessment_id)
+    if a is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assessment not found")
+    return report_export.read_strix_report(a)
+
+
 @router.get("/assessment/{assessment_id}/export")
 async def export_assessment_report(
     assessment_id: int,
     request: Request,
-    fmt: str = Query(default="pdf", pattern="^(pdf|csv|json)$"),
+    fmt: str = Query(default="pdf", pattern="^(pdf|csv|json|md)$"),
     db: AsyncSession = Depends(get_db),
     actor: User = Depends(require_permission(Permission.REPORT_EXPORT)),
 ) -> Response:

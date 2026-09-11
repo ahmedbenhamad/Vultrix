@@ -5,8 +5,8 @@ import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { ToastProvider } from "@/components/ui/toast";
 
 export const metadata: Metadata = {
-  title: "Strix Console",
-  description: "Security operations console for the Strix AI penetration-testing platform",
+  title: "Vultrix Console",
+  description: "Security operations console for the Vultrix AI penetration-testing platform",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

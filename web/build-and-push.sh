@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# Build and push Strix Console images to Docker Hub.
+# Build and push Vultrix Console images to Docker Hub.
 #   1. Start the Docker daemon
 #   2. docker login          (enter your Docker Hub credentials yourself)
 #   3. ./build-and-push.sh   (env: NAMESPACE, TAG, SKIP_PUSH=1)
@@ -11,8 +11,8 @@ NAMESPACE="${NAMESPACE:-ahmedbenhamad}"
 TAG="${TAG:-0.1.0}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-BACKEND="${NAMESPACE}/strix-console-backend"
-FRONTEND="${NAMESPACE}/strix-console-frontend"
+BACKEND="${NAMESPACE}/vultrix-console-backend"
+FRONTEND="${NAMESPACE}/vultrix-console-frontend"
 
 echo "==> Building backend: ${BACKEND}"
 docker build -t "${BACKEND}:${TAG}" -t "${BACKEND}:latest" "${HERE}/backend"

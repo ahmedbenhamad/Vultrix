@@ -9,13 +9,13 @@ import os
 import pathlib
 import tempfile
 
-_TEST_DB = pathlib.Path(tempfile.gettempdir()) / "strix_console_test.db"
+_TEST_DB = pathlib.Path(tempfile.gettempdir()) / "vultrix_console_test.db"
 if _TEST_DB.exists():
     _TEST_DB.unlink()
 
 os.environ["DATABASE_URL"] = f"sqlite+pysqlite:///{_TEST_DB.as_posix()}"
 os.environ["SECRET_KEY"] = "test-secret-key-not-for-production"
-os.environ["FIRST_ADMIN_EMAIL"] = "admin@strix.local"
+os.environ["FIRST_ADMIN_EMAIL"] = "admin@vultrix.local"
 os.environ["FIRST_ADMIN_PASSWORD"] = "ChangeMe123!"
 os.environ["STRIX_FORCE_SIMULATION"] = "true"  # never launch the real engine in tests
 os.environ["LOGIN_RATELIMIT"] = "1000/minute"  # don't let the suite's many logins trip the limiter
@@ -45,7 +45,7 @@ def _clean_cookies(client):
 def admin_token(client) -> str:
     r = client.post(
         "/api/v1/auth/login",
-        data={"username": "admin@strix.local", "password": "ChangeMe123!"},
+        data={"username": "admin@vultrix.local", "password": "ChangeMe123!"},
     )
     assert r.status_code == 200, r.text
     return r.json()["access_token"]

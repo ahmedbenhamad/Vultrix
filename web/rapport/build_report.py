@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Construit le rapport PFE (français) — Strix Console."""
+"""Construit le rapport PFE (français) — Vultrix Console."""
 import os
 from docx import Document
 from docx.shared import Pt, Inches, RGBColor
@@ -139,7 +139,7 @@ p("Automatisation avancée des tests d'intrusion par un système d'IA",
   16, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, color=NAVY, after=0)
 p("agentique : intégration de Metasploit & RAG et conception d'une",
   16, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, color=NAVY, after=0)
-p("console web d'opérations de sécurité (Strix Console)",
+p("console web d'opérations de sécurité (Vultrix Console)",
   16, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, color=NAVY, after=28)
 p("Réalisé par : [Nom et Prénom de l'étudiant]", 12, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, after=18)
 p("Encadrant académique : [Nom]", 11, align=WD_ALIGN_PARAGRAPH.CENTER, after=0)
@@ -179,7 +179,7 @@ p("Ce projet de fin d'études porte sur l'automatisation avancée des tests d'in
   "unique et déterministe, exploit_research, interroge la base RAG puis recherche un module "
   "Metasploit et produit une recommandation « module d'abord », réduisant la charge de décision "
   "confiée au modèle. La seconde contribution est la conception et la réalisation d'une console "
-  "web professionnelle d'opérations de sécurité, Strix Console, offrant l'authentification forte "
+  "web professionnelle, Vultrix Console, offrant l'authentification forte "
   "(cookies httpOnly, CSRF, MFA TOTP), un contrôle d'accès par rôles (RBAC), le pilotage et le "
   "suivi temps réel des campagnes (WebSocket), la visualisation de la sortie du moteur, une phase "
   "de post-exploitation, le triage des vulnérabilités, la comparaison de scans, la planification "
@@ -195,7 +195,7 @@ p("This graduation project addresses the advanced automation of penetration test
   "exploitation framework and a Retrieval-Augmented Generation (RAG) knowledge service: a single "
   "deterministic tool, exploit_research, queries the RAG, searches Metasploit and returns a "
   "module-first recommendation, offloading decision complexity from the model. Second, it designs "
-  "and builds a professional security-operations web console, Strix Console, providing strong "
+  "and builds a professional, Vultrix Console, providing strong "
   "authentication (httpOnly cookies, CSRF, TOTP MFA), role-based access control, real-time "
   "assessment orchestration (WebSocket), engine-output visualisation, a post-exploitation phase, "
   "findings triage, scan diffing, recurring scheduling, report export and a tamper-evident audit "
@@ -213,7 +213,7 @@ doc.add_heading("Liste des figures", level=1)
 figs = [
     "Figure 1.1 — Planning du projet (méthodologie itérative par phases)",
     "Figure 2.1 — Handoff d'exploitation : RAG + Metasploit (priorité au module)",
-    "Figure 3.1 — Architecture globale de la plateforme Strix Console",
+    "Figure 3.1 — Architecture globale de la plateforme Vultrix Console",
     "Figure 3.2 — Diagramme de cas d'utilisation",
     "Figure 3.3 — Diagramme de séquence : exécution d'un test",
     "Figure 3.4 — Matrice RBAC : permissions par rôle système",
@@ -271,7 +271,7 @@ p("L'émergence des grands modèles de langage (LLM) et des architectures dites 
   "d'opérations sécurisée offrant gouvernance, traçabilité et pilotage.")
 p("Ce projet répond à ces deux limites. Il intègre au moteur Strix le framework Metasploit et "
   "un service de connaissances RAG au travers d'un outil déterministe unique, puis conçoit et "
-  "réalise une console web professionnelle, Strix Console, dédiée à l'orchestration et au suivi "
+  "réalise une console web professionnelle, Vultrix Console, dédiée à l'orchestration et au suivi "
   "des campagnes de sécurité.")
 p("Le présent rapport est organisé en cinq chapitres. Le premier présente le cadre général du "
   "projet et la méthodologie adoptée. Le deuxième dresse un état de l'art des tests d'intrusion "
@@ -311,7 +311,7 @@ bullets([
      "RAG dans le moteur Strix via un outil unique et déterministe, exploit_research, qui "
      "interroge le RAG, recherche un module Metasploit et renvoie une recommandation « module "
      "d'abord ». La logique de décision est déplacée du modèle vers du code Python vérifiable."),
-    ("Volet 2 — Console d'opérations. ", "Conception d'une application web, Strix Console, "
+    ("Volet 2 — Console d'opérations. ", "Conception d'une application web, Vultrix Console, "
      "offrant authentification forte, RBAC, pilotage et suivi temps réel des campagnes, "
      "visualisation de la sortie du moteur, post-exploitation, triage, comparaison de scans, "
      "planification récurrente, reporting et audit inaltérable."),
@@ -401,7 +401,7 @@ p("La plateforme adopte une architecture trois tiers. Le client (Next.js) commun
   "asynchrone. Ce dernier expose les services métier, persiste les données dans PostgreSQL "
   "(SQLite en développement) et pilote le moteur Strix, lequel s'appuie sur Metasploit et le "
   "service RAG. Redis fournit files et cache.")
-figure("architecture.png", 3, "Architecture globale de la plateforme Strix Console.")
+figure("architecture.png", 3, "Architecture globale de la plateforme Vultrix Console.")
 
 h2("3.3 Besoins")
 h3("3.3.1 Acteurs")
@@ -429,7 +429,7 @@ table(["Réf.", "Besoin non fonctionnel"], [
     ["BNF4", "Fiabilité : réconciliation des exécutions, tests automatisés"],
     ["BNF5", "Maintenabilité : migrations versionnées, séparation claire des couches"],
     ["BNF6", "Observabilité : identifiants de requête, sondes /readyz et /livez"],
-], caption="Besoins non fonctionnels.", widths=[0.9, 5.4])
+], caption="Besoin non fonctionnels.", widths=[0.9, 5.4])
 
 h2("3.4 Diagrammes UML")
 h3("3.4.1 Diagramme de cas d'utilisation")
@@ -604,13 +604,13 @@ p("Ce projet de fin d'études a abordé l'automatisation avancée des tests d'in
   "La première fiabilise la phase la plus délicate — l'exploitation — en intégrant Metasploit et "
   "un service RAG au moteur Strix via un outil déterministe unique, exploit_research, qui déplace "
   "la décision du modèle vers du code vérifiable et privilégie un exécuteur éprouvé.")
-p("La seconde transforme un outil en ligne de commande en une véritable console d'opérations de "
-  "sécurité, Strix Console, dotée d'une authentification forte, d'un contrôle d'accès par rôles, "
-  "d'un suivi temps réel, d'une visualisation de la sortie du moteur, d'une phase de "
-  "post-exploitation, du triage des vulnérabilités, de la comparaison de scans, de la "
-  "planification récurrente, du reporting et d'un journal d'audit inaltérable. L'ensemble, "
-  "développé avec Next.js et FastAPI, a été validé par 39 tests automatisés et vérifié de bout "
-  "en bout.")
+p("La seconde transforme un outil en ligne de commande en une véritable console "
+  "d'opérations de sécurité, Vultrix Console, dotée d'une authentification forte, "
+  "d'un contrôle d'accès par rôles, d'un suivi temps réel, d'une visualisation de la sortie du "
+  "moteur, d'une phase de post-exploitation, du triage des vulnérabilités, de la comparaison de "
+  "scans, de la planification récurrente, du reporting et d'un journal d'audit inaltérable. "
+  "L'ensemble, développé avec Next.js et FastAPI, a été validé par 39 tests automatisés et "
+  "vérifié de bout en bout.")
 p("Au-delà des résultats obtenus, ce travail confirme la pertinence d'une approche hybride "
   "associant l'autonomie des agents IA à la robustesse d'outils éprouvés, encadrée par une "
   "plateforme sûre et gouvernée. Les perspectives — extraction du runner vers une file durable, "
@@ -637,7 +637,7 @@ for i, r in enumerate(refs, 1):
     para.add_run(f"[{i}] ").bold = True
     para.add_run(r)
 
-out = os.path.join(HERE, "Rapport_PFE_Strix_Console.docx")
+out = os.path.join(HERE, "Rapport_PFE_Vultrix_Console.docx")
 doc.save(out)
 print("SAVED:", out)
 print("Paragraphs:", len(doc.paragraphs))

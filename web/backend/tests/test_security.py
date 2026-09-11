@@ -28,17 +28,17 @@ def _make_user(client, admin_headers, email, role_name="analyst", password="Test
 
 # ── cookie auth + CSRF ────────────────────────────────────────────────────────
 def test_login_sets_httponly_cookies(client):
-    r = client.post(f"{API}/auth/login", data={"username": "admin@strix.local", "password": "ChangeMe123!"})
+    r = client.post(f"{API}/auth/login", data={"username": "admin@vultrix.local", "password": "ChangeMe123!"})
     assert r.status_code == 200
     cookies = r.cookies
-    assert "strix_access" in cookies and "strix_refresh" in cookies and "strix_csrf" in cookies
+    assert "vultrix_access" in cookies and "vultrix_refresh" in cookies and "vultrix_csrf" in cookies
     client.cookies.clear()
 
 
 def test_csrf_blocks_cookie_mutation_without_header(client):
     # authenticate via cookies (no bearer)
-    client.post(f"{API}/auth/login", data={"username": "admin@strix.local", "password": "ChangeMe123!"})
-    csrf = client.cookies.get("strix_csrf")
+    client.post(f"{API}/auth/login", data={"username": "admin@vultrix.local", "password": "ChangeMe123!"})
+    csrf = client.cookies.get("vultrix_csrf")
 
     # cookie-auth POST without the CSRF header -> blocked
     r = client.post(f"{API}/assessments", json={"name": "x", "target": "y"})
@@ -55,8 +55,8 @@ def test_csrf_blocks_cookie_mutation_without_header(client):
 
 
 def test_logout_clears_cookies(client):
-    client.post(f"{API}/auth/login", data={"username": "admin@strix.local", "password": "ChangeMe123!"})
-    csrf = client.cookies.get("strix_csrf")
+    client.post(f"{API}/auth/login", data={"username": "admin@vultrix.local", "password": "ChangeMe123!"})
+    csrf = client.cookies.get("vultrix_csrf")
     r = client.post(f"{API}/auth/logout", headers={"X-CSRF-Token": csrf})
     assert r.status_code == 200
     client.cookies.clear()
@@ -64,7 +64,7 @@ def test_logout_clears_cookies(client):
 
 # ── object-level authz ────────────────────────────────────────────────────────
 def test_analyst_sees_only_own_assessments(client, admin_headers):
-    email, pw = _make_user(client, admin_headers, "analyst-authz@strix.io", "analyst")
+    email, pw = _make_user(client, admin_headers, "analyst-authz@vultrix.io", "analyst")
     ah = _bearer_login(client, email, pw)
 
     # analyst creates one
@@ -90,7 +90,7 @@ def test_analyst_sees_only_own_assessments(client, admin_headers):
 
 # ── account lockout ───────────────────────────────────────────────────────────
 def test_account_lockout_after_failures(client, admin_headers):
-    email, pw = _make_user(client, admin_headers, "lockme@strix.io", "viewer")
+    email, pw = _make_user(client, admin_headers, "lockme@vultrix.io", "viewer")
     for _ in range(5):  # MAX_FAILED_LOGINS
         client.post(f"{API}/auth/login", data={"username": email, "password": "wrong"})
     # even the CORRECT password is now rejected with 403 (locked)
@@ -102,7 +102,7 @@ def test_account_lockout_after_failures(client, admin_headers):
 
 # ── TOTP MFA ──────────────────────────────────────────────────────────────────
 def test_mfa_setup_enable_and_login(client, admin_headers):
-    email, pw = _make_user(client, admin_headers, "mfa-user@strix.io", "analyst")
+    email, pw = _make_user(client, admin_headers, "mfa-user@vultrix.io", "analyst")
     ah = _bearer_login(client, email, pw)
 
     setup = client.post(f"{API}/auth/mfa/setup", headers=ah).json()

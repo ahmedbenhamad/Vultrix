@@ -5,8 +5,8 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(__file__)
-DOCX = os.path.join(HERE, "Rapport_PFE_Strix_Console.docx")
-PDF = os.path.join(HERE, "Rapport_PFE_Strix_Console.pdf")
+DOCX = os.path.join(HERE, "Rapport_PFE_Vultrix_Console.docx")
+PDF = os.path.join(HERE, "Rapport_PFE_Vultrix_Console.pdf")
 SOFFICE = r"C:\Program Files\LibreOffice\program\soffice.exe"
 
 # 1) DOCX -> PDF via LibreOffice headless

@@ -50,9 +50,9 @@ def test_viewer_cannot_manage_schedules(client, admin_headers):
     roles = client.get(f"{API}/roles", headers=admin_headers).json()
     vid = next(r["id"] for r in roles if r["name"] == "viewer")
     client.post(f"{API}/users", headers=admin_headers,
-                json={"email": "sched-viewer@strix.io", "password": "ViewerPass1", "role_id": vid})
+                json={"email": "sched-viewer@vultrix.io", "password": "ViewerPass1", "role_id": vid})
     tok = client.post(f"{API}/auth/login",
-                      data={"username": "sched-viewer@strix.io", "password": "ViewerPass1"}).json()["access_token"]
+                      data={"username": "sched-viewer@vultrix.io", "password": "ViewerPass1"}).json()["access_token"]
     vh = {"Authorization": f"Bearer {tok}"}
     r = client.post(f"{API}/schedules", headers=vh, json={"name": "x", "target": "y", "cron": "0 2 * * *"})
     assert r.status_code == 403

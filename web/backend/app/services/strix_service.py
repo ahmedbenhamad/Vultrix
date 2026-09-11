@@ -167,24 +167,36 @@ def cancel(assessment_id: int) -> None:
 
 
 def reconcile_orphans() -> None:
-    """On startup, mark assessments left RUNNING by a dead process as failed.
+    """On startup, fail assessments orphaned by a dead process.
 
-    A fresh backend process has no live threads for previously-running scans, so
-    they'd otherwise be stuck 'running' forever. (Phase 2 will reattach to live
-    ``strix_runs/`` dirs instead of failing them.)
+    A fresh backend process has no live threads for scans that were previously
+    RUNNING *or* QUEUED (waiting for a concurrency slot). Both are orphaned — the
+    thread that would advance them died with the old process — so without this
+    they'd be stuck 'running'/'queued' forever. Mark them failed so the user can
+    re-run them explicitly (we intentionally do not auto-relaunch, to avoid
+    surprise scans firing on every restart).
     """
     from sqlalchemy import select
 
     db = SessionLocal()
     try:
         rows = (
-            db.execute(select(Assessment).where(Assessment.status == AssessmentStatus.RUNNING))
+            db.execute(
+                select(Assessment).where(
+                    Assessment.status.in_([AssessmentStatus.RUNNING, AssessmentStatus.QUEUED])
+                )
+            )
             .scalars()
             .all()
         )
         for a in rows:
+            was_queued = a.status == AssessmentStatus.QUEUED
             a.status = AssessmentStatus.FAILED
-            a.error = "Interrupted: the backend restarted while this assessment was running."
+            a.error = (
+                "Interrupted: the backend restarted while this assessment was queued."
+                if was_queued
+                else "Interrupted: the backend restarted while this assessment was running."
+            )
             a.finished_at = datetime.now(UTC)
             db.add(
                 LogEntry(
@@ -275,6 +287,74 @@ def _ingest_findings(db, assessment_id: int, run_dir: Path | None, seen: set[str
     db.commit()
 
 
+def _ingest_events(assessment_id: int, run_dir: Path | None, offset: int) -> int:
+    """Tail the engine's ``events.jsonl`` and republish structured events live.
+
+    This is what makes the web console mirror the Strix CLI: the tracer writes
+    one JSON line per thinking message / tool call / agent lifecycle event, and
+    we forward each as a typed WS event the frontend renders CLI-style. Returns
+    the new byte offset. No-op (returns offset unchanged) if the file is absent,
+    so simulations and older engines degrade to the plain stdout log.
+    """
+    if run_dir is None:
+        return offset
+    path = run_dir / "events.jsonl"
+    if not path.exists():
+        return offset
+    try:
+        with path.open("r", encoding="utf-8", errors="replace") as f:
+            f.seek(offset)
+            chunk = f.read()
+            new_offset = f.tell()
+    except OSError:
+        return offset
+
+    for line in chunk.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            ev = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        kind = ev.get("kind")
+        if kind == "agent_created":
+            events.publish(assessment_id, {
+                "type": "agent", "action": "created",
+                "agent_id": ev.get("agent_id"), "name": ev.get("name"),
+                "task": ev.get("task"), "parent_id": ev.get("parent_id"),
+            })
+        elif kind == "agent_status":
+            events.publish(assessment_id, {
+                "type": "agent", "action": "status",
+                "agent_id": ev.get("agent_id"), "status": ev.get("status"),
+            })
+        elif kind == "chat_message":
+            role = (ev.get("role") or "").lower()
+            if role not in ("assistant", "user"):
+                continue
+            events.publish(assessment_id, {
+                "type": "message", "role": role,
+                "agent_id": ev.get("agent_id"), "content": ev.get("content", ""),
+                "interrupted": bool(ev.get("interrupted")),
+                "ts": ev.get("ts"),
+            })
+        elif kind == "tool_start":
+            events.publish(assessment_id, {
+                "type": "tool", "phase": "start",
+                "agent_id": ev.get("agent_id"), "agent_name": ev.get("agent_name"),
+                "tool_name": ev.get("tool_name"), "args": ev.get("args") or {},
+                "ts": ev.get("ts"),
+            })
+        elif kind == "tool_end":
+            events.publish(assessment_id, {
+                "type": "tool", "phase": "end",
+                "agent_id": ev.get("agent_id"), "tool_name": ev.get("tool_name"),
+                "status": ev.get("status"), "ts": ev.get("ts"),
+            })
+    return new_offset
+
+
 def _tail_file(path: Path | None, offset: int) -> tuple[list[str], int]:
     if path is None or not path.exists():
         return [], offset
@@ -311,6 +391,12 @@ def _final_status(run_dir: Path | None, returncode: int | None, cancelled: bool)
                     return AssessmentStatus.FAILED, "Strix reported the run as failed (see logs)."
             except (OSError, json.JSONDecodeError):
                 pass
+        # The engine writes the final report only when a run finishes and the
+        # reporting agent completes. Its presence is a stronger success signal
+        # than the CLI exit code, which can be non-zero even after a complete
+        # assessment (late sandbox teardown, a subagent error post-reporting).
+        if (run_dir / "penetration_test_report.md").exists():
+            return AssessmentStatus.COMPLETED, None
     if returncode == 0:
         return AssessmentStatus.COMPLETED, None
     return AssessmentStatus.FAILED, f"Strix process exited with code {returncode}."
@@ -470,6 +556,7 @@ def _run_real(assessment_id: int) -> None:
                  "Run directory not created yet (sandbox warm-up); streaming engine output.")
 
         seen: set[str] = set()
+        events_offset = 0
         start = time.time()
         expected = max(60, settings.STRIX_EXPECTED_DURATION)
 
@@ -488,6 +575,7 @@ def _run_real(assessment_id: int) -> None:
                     _log(db, assessment_id, "info", f"Run directory: strix_runs/{run_dir.name}")
 
             _ingest_findings(db, assessment_id, run_dir, seen)
+            events_offset = _ingest_events(assessment_id, run_dir, events_offset)
             _persist_cli()
 
             # progress ramps toward 90% over the expected duration, nudged by findings
@@ -506,6 +594,7 @@ def _run_real(assessment_id: int) -> None:
         # final pass — let the reader drain the closed pipe, then flush everything.
         reader.join(timeout=10)
         _ingest_findings(db, assessment_id, run_dir, seen)
+        events_offset = _ingest_events(assessment_id, run_dir, events_offset)
         _persist_cli(limit=10000)
 
         cancelled = assessment_id in _cancelled or _db_status(db, assessment_id) == AssessmentStatus.CANCELLED

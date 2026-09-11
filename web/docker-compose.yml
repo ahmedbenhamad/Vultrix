@@ -2,15 +2,15 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: strix
-      POSTGRES_PASSWORD: strix
-      POSTGRES_DB: strix_console
+      POSTGRES_USER: vultrix
+      POSTGRES_PASSWORD: vultrix
+      POSTGRES_DB: vultrix_console
     ports:
       - "5432:5432"
     volumes:
-      - strix_pgdata:/var/lib/postgresql/data
+      - vultrix_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U strix"]
+      test: ["CMD-SHELL", "pg_isready -U vultrix"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -34,11 +34,11 @@ services:
         condition: service_healthy
     environment:
       # async engine derives asyncpg; sync engine (worker/alembic) derives psycopg
-      DATABASE_URL: postgresql+psycopg://strix:strix@db:5432/strix_console
+      DATABASE_URL: postgresql+psycopg://vultrix:vultrix@db:5432/vultrix_console
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
       BACKEND_CORS_ORIGINS: http://localhost:3000
-      FIRST_ADMIN_EMAIL: ${FIRST_ADMIN_EMAIL:-admin@strix.local}
+      FIRST_ADMIN_EMAIL: ${FIRST_ADMIN_EMAIL:-admin@vultrix.local}
       FIRST_ADMIN_PASSWORD: ${FIRST_ADMIN_PASSWORD:-ChangeMe123!}
     ports:
       - "8080:8000"
@@ -54,4 +54,4 @@ services:
       - "3000:3000"
 
 volumes:
-  strix_pgdata:
+  vultrix_pgdata:
